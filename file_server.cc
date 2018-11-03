@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <fstream>
 
 #include <grpcpp/grpcpp.h>
 
@@ -46,25 +47,47 @@ class FileServiceImpl final : public File::Service {
 
   Status UploadFile(::grpc::ServerContext* context, ::grpc::ServerReader< ::file::FileRequest>* reader, ::file::FileReply* response) override{
     //getting context
-    std::string f_str,f_numstr,f_bytestr;
-    long f_num;
-    int f_byte;
+    std::string f_str,f_numstr,f_bytestr,f_bufferSizestr;
     auto cc=context->client_metadata();
 
-    if(getVal(cc,"f_str",f_str) && getVal(cc,"f_num",f_numstr) && getVal(cc,"f_byte",f_bytestr)){
-        std::cout << f_str<<" | "<<f_numstr<<" | "<<f_bytestr << '\n';
-        f_num=std::stol(f_numstr);
-        f_byte=std::stoi(f_bytestr);
+    if(getVal(cc,"f_str",f_str) && getVal(cc,"f_num",f_numstr) && getVal(cc,"f_byte",f_bytestr)  && getVal(cc,"f_buffer",f_bufferSizestr) ){
+        std::cout << f_str<<" | "<<f_numstr<<" | "<<f_bytestr <<" | "<< f_bufferSizestr << '\n';
     }else{
+      //exception, terminate file transfer
       std::cout << "need str num and file size to upload file" << '\n';
       return Status(StatusCode::INVALID_ARGUMENT, "Need str, num and file size to upload file\n");
     }
+    long f_num;
+    int f_byte,f_byteRemain;
+    const int f_bufferSize=std::stoi(f_bufferSizestr);
+    f_num=std::stol(f_numstr);
+    f_byte=std::stoi(f_bytestr);
+    f_byteRemain=f_byte;
 
     //read stream
+    std::ofstream outfile ("server/"+f_numstr+"."+f_str,std::ifstream::binary);
+    // char* buffer = new char[f_buffer];
+
     FileRequest file;
-    while (reader->Read(&file)) {
-        std::cout << file.content()<<std::flush;
+    while (f_byteRemain>0) {
+      reader->Read(&file);
+      const char *charContent=file.content().c_str();
+      std::cout << file.content() << '\n';
+      int len=f_bufferSize;
+      if(f_byteRemain-f_bufferSize>0){
+        //keeping count of size of bit remaining
+        f_byteRemain=f_byteRemain-f_bufferSize;
+      }else{
+        //reached end of file, trim the extra bit
+        len=f_byteRemain;
+        f_byteRemain=f_byteRemain-f_bufferSize;
+      }
+
+      outfile.write(charContent,len);
+      std::cout << file.content().length() <<'\t' <<std::flush;
     }
+    // delete[] buffer;
+    outfile.close();
 
     //stream done
     return Status::OK;

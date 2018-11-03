@@ -29,7 +29,9 @@
 #include "file.grpc.pb.h"
 
 //https://stackoverflow.com/questions/3033771/file-i-o-with-streams-best-memory-buffer-size
-#define buffersize 5 // suggested size
+
+//NOTE:: GRPC SEND MIN OF 6 BYTES, SERVER RECEIVE EXTRA BIT, TRIM
+#define buffersize 1 // suggested size
 
 
 using grpc::Channel;
@@ -96,6 +98,7 @@ class FileClient {
     context.AddMetadata("f_str",str);
     context.AddMetadata("f_num",std::to_string(num));
     context.AddMetadata("f_byte",std::to_string(fileByte));
+    context.AddMetadata("f_buffer",std::to_string(buffersize));
 
 
     // stream start;
@@ -113,7 +116,7 @@ class FileClient {
           break;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
     delete[] memblock;
 
