@@ -19,16 +19,21 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <fstream>
 
 #include <grpcpp/grpcpp.h>
 
 #include "file.grpc.pb.h"
 
+#define buffersize 1048576 //in Byte (1MB)
+
+
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-using file::PerFileRequest;
-using file::Token;
+using grpc::ClientWriter;
+using file::FileRequest;
+using file::FileReply;
 using file::File;
 
 class FileClient {
@@ -36,31 +41,72 @@ class FileClient {
   FileClient(std::shared_ptr<Channel> channel)
       : stub_(File::NewStub(channel)) {}
 
-  // Assembles the client's payload, sends it and presents the response back
-  // from the server.
-  std::string PerUploadFile() {
-    PerFileRequest request;
-    request.set_str("file1.bin");
-    request.set_filebyte(555);
-    request.set_num(666);
+  //   std::string PerUploadFile(Token& token,const std::string& filepath,const std::string& str="", int num=0) {
+  //   //get file size and wait for upload
+  //   int fileByte;
+  //   std::ifstream f (filepath, std::ios::in|std::ios::binary|std::ios::ate);
+  //   if (f.is_open()){
+  //     fileByte = f.tellg();
+  //     f.close();
+  //   }else{
+  //     std::cout << "Unable to open file trying to upload";
+  //     std::exit(-1);
+  //   }
+  //
+  //   PerFileRequest request;
+  //   request.set_str(str);
+  //   request.set_filebyte(fileByte);
+  //   request.set_num(num);
+  //
+  //   // Context for the client. It could be used to convey extra information to
+  //   // the server and/or tweak certain RPC behaviors.
+  //   ClientContext context;
+  //
+  //   // The actual RPC.
+  //   Status status = stub_->PerUploadFile(&context, request, &token);
+  //
+  //   // Act upon its status.
+  //   if (status.ok()) {
+  //     return std::to_string(token.hash());
+  //   } else {
+  //     std::cout << status.error_code() << ": " << status.error_message()
+  //               << std::endl;
+  //     return "RPC failed";
+  //   }
+  // }
 
-    // Container for the data we expect from the server.
-    Token token;
-
-    // Context for the client. It could be used to convey extra information to
-    // the server and/or tweak certain RPC behaviors.
+//https://stackoverflow.com/questions/34751873/how-to-read-huge-file-in-c
+  void UploadFile(std::string filepath){
+    FileReply reply;
     ClientContext context;
 
-    // The actual RPC.
-    Status status = stub_->PerUploadFile(&context, request, &token);
+    // ifstream bigFile(filepath);
+    char x[5]={0x48,0x65,0x6c,0x6c,0x6f};
+    std::string y="! Ben!";
 
-    // Act upon its status.
+
+
+
+
+    std::unique_ptr<ClientWriter<FileRequest> > writer(stub_->UploadFile(&context, &reply));
+
+    //streaming start
+    for(int i=0;i<5;i++){
+      FileRequest f;
+      f.set_content(y);
+      if(!writer->Write(f)){
+        break;
+      }
+    }
+
+    //stream done
+    writer->WritesDone();
+    Status status = writer->Finish();
+
     if (status.ok()) {
-      return std::to_string(token.hash());
-    } else {
-      std::cout << status.error_code() << ": " << status.error_message()
-                << std::endl;
-      return "RPC failed";
+      std::cout << "replay message: "<<reply.message() << '\n';
+    }else{
+      std::cout << "RecordRoute rpc failed." << std::endl;
     }
   }
 
@@ -75,8 +121,14 @@ int main(int argc, char** argv) {
   // (use of InsecureChannelCredentials()).
   FileClient file(grpc::CreateChannel(
       "localhost:50051", grpc::InsecureChannelCredentials()));
-  std::string token = file.PerUploadFile();
-  std::cout << "file token: " << token << std::endl;
+
+  // std::string tokenHash = file.PerUploadFile(token,"client/comarch.7z","comarch",255);
+  // std::cout << "file token: " << token.hash() << std::endl;
+
+  file.UploadFile("x");
+
+
+
 
   return 0;
 }

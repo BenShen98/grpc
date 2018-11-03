@@ -27,16 +27,12 @@
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
+using grpc::ServerReader;
 using grpc::Status;
-using file::PerFileRequest;
-using file::Token;
+using file::FileRequest;
+using file::FileReply;
 using file::File;
 
-struct PerFile {
-  long num;
-  std::string str;
-  int fileByte;
-};
 
 inline long PerFileHash(int fileByte, long num,std::string str){
   return (num<<32) ^ std::hash<std::string>{}(str) ^ (num<<1);
@@ -57,12 +53,30 @@ inline long PerFileHash(int fileByte, long num,std::string str){
 
 // Logic and data behind the server's behavior.
 class FileServiceImpl final : public File::Service {
-  Status PerUploadFile(ServerContext* context, const PerFileRequest* request, Token* token) override {
-    int hash=PerFileHash(request->filebyte(),request->num(),request->str());
-    std::cout << request->filebyte()<<"  xx  "<<request->num()<<"  xx  "<<request->str() << '\n';
-    token->set_hash(hash);
+  // Status PerUploadFile(ServerContext* context, const PerFileRequest* request, Token* token) override {
+  //   int hash=PerFileHash(request->filebyte(),request->num(),request->str());
+  //   std::cout << request->filebyte()<<"  |  "<<request->num()<<"  |  "<<request->str() << '\n';
+  //   token->set_hash(hash);
+  //   return Status::OK;
+  // }
+
+  Status UploadFile(::grpc::ServerContext* context, ::grpc::ServerReader< ::file::FileRequest>* reader, ::file::FileReply* response) override{
+    //getting context
+    FileRequest file;
+
+    //read stream
+    while (reader->Read(&file)) {
+        std::cout << file.content() << '\n';
+    }
+
+    //stream done
     return Status::OK;
+
+
+
+
   }
+
 
 };
 
