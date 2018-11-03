@@ -1,0 +1,22 @@
+Server listening on 0.0.0.0:50051
+! Ben!
+! Ben!
+! Ben!
+! Ben!
+! Ben!
+Server listening on 0.0.0.0:50051
+conetxt abc@tetrailers@content-typeapplication/grpc@
+user-agent4grpc-c++/1.15.0 grpc-c/6.0.0 (linux; chttp2; glider)@grpc-accept-encodingidentity,deflate,gzip@accept-encodingidentity,gzip
+! Ben!
+! Ben!
+! Ben!
+! Ben!
+! Ben!
+conetxt abc@tetrailers@content-typeapplication/grpc@
+user-agent4grpc-c++/1.15.0 grpc-c/6.0.0 (linux; chttp2; glider)@grpc-accept-encodingidentity,deflate,gzip@accept-encodingidentity,gzip
+! Ben!
+! Ben!
+! Ben!
+! Ben!
+! Ben!
+conetxt abc@tetrailers@content-typeapplication

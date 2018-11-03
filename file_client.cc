@@ -80,6 +80,11 @@ class FileClient {
     FileReply reply;
     ClientContext context;
 
+    context.AddMetadata("f_str","abc");
+    context.AddMetadata("f_num","123");
+    context.AddMetadata("f_byte","666");
+
+
     // ifstream bigFile(filepath);
     char x[5]={0x48,0x65,0x6c,0x6c,0x6f};
     std::string y="! Ben!";
@@ -106,7 +111,8 @@ class FileClient {
     if (status.ok()) {
       std::cout << "replay message: "<<reply.message() << '\n';
     }else{
-      std::cout << "RecordRoute rpc failed." << std::endl;
+      std::cout << status.error_code() << ": " << status.error_message();
+      std::cout << "file rpc failed." << std::endl;
     }
   }
 

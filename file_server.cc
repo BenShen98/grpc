@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <map>
 
 #include <grpcpp/grpcpp.h>
 
@@ -29,6 +30,7 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::ServerReader;
 using grpc::Status;
+using grpc::StatusCode;
 using file::FileRequest;
 using file::FileReply;
 using file::File;
@@ -62,9 +64,22 @@ class FileServiceImpl final : public File::Service {
 
   Status UploadFile(::grpc::ServerContext* context, ::grpc::ServerReader< ::file::FileRequest>* reader, ::file::FileReply* response) override{
     //getting context
-    FileRequest file;
+    std::string f_str,f_numstr,f_bytestr;
+    long f_num;
+    int f_byte;
+    auto cc=context->client_metadata();
+
+    if(getVal(cc,"f_str",f_str) && getVal(cc,"f_num",f_numstr) && getVal(cc,"f_byte",f_bytestr)){
+        std::cout << f_str<<" | "<<f_numstr<<" | "<<f_bytestr << '\n';
+        f_num=std::stol(f_numstr);
+        f_byte=std::stoi(f_bytestr);
+    }else{
+      std::cout << "need str num and file size to upload file" << '\n';
+      return Status(StatusCode::INVALID_ARGUMENT, "Need str, num and file size to upload file\n");
+    }
 
     //read stream
+    FileRequest file;
     while (reader->Read(&file)) {
         std::cout << file.content() << '\n';
     }
@@ -72,9 +87,19 @@ class FileServiceImpl final : public File::Service {
     //stream done
     return Status::OK;
 
+  }
 
-
-
+private:
+  bool getVal(const std::multimap<grpc::string_ref, grpc::string_ref>& cc,const std::string& key,std::string& result){
+    auto search=cc.find(key);
+    if (search != cc.end()) {
+      result = search->second.data();
+      result=result.substr(0,result.find('@'));
+      return true;
+    }else{
+      std::cout << "value for key "<<key <<" not found from context" << '\n';
+      return false;
+    }
   }
 
 
