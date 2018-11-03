@@ -20,12 +20,16 @@
 #include <memory>
 #include <string>
 #include <fstream>
+#include <thread>
+#include <chrono>
+
 
 #include <grpcpp/grpcpp.h>
 
 #include "file.grpc.pb.h"
 
-#define buffersize 1048576 //in Byte (1MB)
+//https://stackoverflow.com/questions/3033771/file-i-o-with-streams-best-memory-buffer-size
+#define buffersize 5 // suggested size
 
 
 using grpc::Channel;
@@ -76,35 +80,46 @@ class FileClient {
   // }
 
 //https://stackoverflow.com/questions/34751873/how-to-read-huge-file-in-c
-  void UploadFile(std::string filepath){
+  void UploadFile(const std::string& filepath,const std::string& str,int num){
     FileReply reply;
     ClientContext context;
+    char * memblock;
 
-    context.AddMetadata("f_str","abc");
-    context.AddMetadata("f_num","123");
-    context.AddMetadata("f_byte","666");
-
-
-    // ifstream bigFile(filepath);
-    char x[5]={0x48,0x65,0x6c,0x6c,0x6f};
-    std::string y="! Ben!";
-
-
-
-
-
-    std::unique_ptr<ClientWriter<FileRequest> > writer(stub_->UploadFile(&context, &reply));
-
-    //streaming start
-    for(int i=0;i<5;i++){
-      FileRequest f;
-      f.set_content(y);
-      if(!writer->Write(f)){
-        break;
-      }
+    int fileByte;
+    std::ifstream f (filepath, std::ios::in|std::ios::binary|std::ios::ate);
+    if (f.is_open()){
+      fileByte = f.tellg();
+    }else{
+      std::cout << "Unable to open file trying to upload";
+      std::exit(-1);
     }
+    context.AddMetadata("f_str",str);
+    context.AddMetadata("f_num",std::to_string(num));
+    context.AddMetadata("f_byte",std::to_string(fileByte));
+
+
+    // stream start;
+    memblock = new char [buffersize];
+    f.seekg (0, std::ios::beg);
+    std::unique_ptr<ClientWriter<FileRequest> > writer(stub_->UploadFile(&context, &reply));
+    // char x[5]={0x48,0x65,0x6c,0x6c,0x6f};
+    // std::string y="! Ben!";
+    while (f){
+      std::cout << "loop1" << '\n';
+        f.read(memblock, buffersize);
+        FileRequest request;
+        request.set_content(memblock);
+        if(!writer->Write(request)){
+          break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+    delete[] memblock;
 
     //stream done
+
+
     writer->WritesDone();
     Status status = writer->Finish();
 
@@ -131,7 +146,11 @@ int main(int argc, char** argv) {
   // std::string tokenHash = file.PerUploadFile(token,"client/comarch.7z","comarch",255);
   // std::cout << "file token: " << token.hash() << std::endl;
 
-  file.UploadFile("x");
+  // file.UploadFile("client/comarch.7z","comarch",100);
+  file.UploadFile("client/sw_cout.s","mips_sw",100);
+  // file.UploadFile("client/final.s","arm_xmas",100);
+
+
 
 
 

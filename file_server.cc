@@ -35,24 +35,6 @@ using file::FileRequest;
 using file::FileReply;
 using file::File;
 
-
-inline long PerFileHash(int fileByte, long num,std::string str){
-  return (num<<32) ^ std::hash<std::string>{}(str) ^ (num<<1);
-}
-
-
-// struct PerFileHash
-// {
-//     typedef S argument_type;
-//     typedef std::size_t result_type;
-//     result_type operator()(argument_type const& s) const noexcept
-//     {
-//         result_type const h1 ( std::hash<std::string>{}(s.first_name) );
-//         result_type const h2 ( std::hash<std::string>{}(s.last_name) );
-//         return h1 ^ (h2 << 1); // or use boost::hash_combine (see Discussion)
-//     }
-// };
-
 // Logic and data behind the server's behavior.
 class FileServiceImpl final : public File::Service {
   // Status PerUploadFile(ServerContext* context, const PerFileRequest* request, Token* token) override {
@@ -81,7 +63,7 @@ class FileServiceImpl final : public File::Service {
     //read stream
     FileRequest file;
     while (reader->Read(&file)) {
-        std::cout << file.content() << '\n';
+        std::cout << file.content()<<std::flush;
     }
 
     //stream done

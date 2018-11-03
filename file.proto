@@ -6,15 +6,28 @@ package file;
 
 // The greeting service definition.
 service File {
-  // Sends a file, str and num are sent via AddMetadata()
-  rpc UploadFile (stream FileRequest) returns (FileReply) {}
+  // Sends a greeting
+  rpc PerUploadFile (PerFileRequest) returns (Token) {}
+
+  rpc UploadFile (FileRequest) returns (FileReply) {}
+}
+
+// The request message containing the user's name.
+message PerFileRequest {
+  int32 fileByte = 1;
+  int64 num = 2;
+  string str = 3;
 }
 
 // The response message containing the greetings
+message Token {
+  uint64 hash = 1;
+}
+
 message FileRequest {
-  bytes content = 1;
+  bytes content =1;
 }
 
 message FileReply{
-  string message = 1;
+  string reply = 1;
 }
