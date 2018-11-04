@@ -52,18 +52,20 @@ class FileServiceImpl final : public File::Service {
     auto cc=context->client_metadata();
 
     if(getVal(cc,"f_str",f_str) && getVal(cc,"f_num",f_numstr) && getVal(cc,"f_byte",f_bytestr)  && getVal(cc,"f_buffer",f_bufferSizestr) ){
-        std::cout << f_str<<" | "<<f_numstr<<" | "<<f_bytestr <<" | "<< f_bufferSizestr << '\n';
+        std::cout<< "server:\t\t serving "<< f_str<<", with id "<<f_numstr<<". Transferred file size "<<f_bytestr <<", with buffersize "<< f_bufferSizestr << '\n';
     }else{
       //exception, terminate file transfer
-      std::cout << "need str num and file size to upload file" << '\n';
+      std::cout << "server:\t\t need str num and file size to upload file" << '\n';
       return Status(StatusCode::INVALID_ARGUMENT, "Need str, num and file size to upload file\n");
     }
-    long f_num;
-    int f_byte,f_byteRemain;
-    const int f_bufferSize=std::stoi(f_bufferSizestr);
-    f_num=std::stol(f_numstr);
-    f_byte=std::stoi(f_bytestr);
-    f_byteRemain=f_byte;
+
+    //can be used in application
+    // long f_num;
+    // int f_byte,f_bufferSize;
+    // f_bufferSize=std::stoi(f_bufferSizestr);
+    // f_num=std::stol(f_numstr);
+    // f_byte=std::stoi(f_bytestr);
+
 
     //read stream
     std::ofstream outfile ("server/"+f_numstr+"."+f_str,std::ifstream::binary);
@@ -73,7 +75,7 @@ class FileServiceImpl final : public File::Service {
     while (reader->Read(&file)) {
       // reader->Read(&file);
       const char *charContent=file.content().c_str();
-      std::cout << "str length"<<file.content().length()<<", buffer length"<<f_bufferSize << '\n';
+      // std::cout << "str length"<<file.content().length()<<", buffer length"<<f_bufferSize << '\n';
       // for (int i=0;i<f_bufferSize;i++){
       //   std::cout << std::bitset<8>(charContent[i]) << '\t';
       // }
@@ -94,6 +96,7 @@ class FileServiceImpl final : public File::Service {
     outfile.close();
 
     //stream done
+    response->set_message((std::string)"file transfer complete, stored as "+"server/"+f_numstr+"."+f_str);
     return Status::OK;
 
   }
@@ -106,7 +109,7 @@ private:
       result=result.substr(0,result.find('@'));
       return true;
     }else{
-      std::cout << "value for key "<<key <<" not found from context" << '\n';
+      std::cout << "server:\t\t value for key "<<key <<" not found from context" << '\n';
       return false;
     }
   }
@@ -126,7 +129,7 @@ void RunServer() {
   builder.RegisterService(&service);
   // Finally assemble the server.
   std::unique_ptr<Server> server(builder.BuildAndStart());
-  std::cout << "Server listening on " << server_address << std::endl;
+  std::cout << "server:\t\t Server listening on " << server_address << std::endl;
 
   // Wait for the server to shutdown. Note that some other thread must be
   // responsible for shutting down the server for this call to ever return.

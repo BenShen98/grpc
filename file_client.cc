@@ -29,10 +29,8 @@
 
 #include "file.grpc.pb.h"
 
-//https://stackoverflow.com/questions/3033771/file-i-o-with-streams-best-memory-buffer-size
 
-//NOTE:: GRPC SEND MIN OF 6 BYTES, SERVER RECEIVE EXTRA BIT, TRIM
-#define defaultbuffersize 1 // suggested size
+#define defaultbuffersize 4096 // suggested size by https://stackoverflow.com/questions/3033771/file-i-o-with-streams-best-memory-buffer-size
 
 
 using grpc::Channel;
@@ -58,7 +56,7 @@ class FileClient {
     if (f.is_open()){
       fileByte = f.tellg();
     }else{
-      std::cout << "Unable to open file trying to upload";
+      std::cout << "client:\t\t Unable to open file trying to upload";
       std::exit(-1);
     }
     context.AddMetadata("f_str",str);
@@ -75,7 +73,7 @@ class FileClient {
     // std::string y="! Ben!";
     int size=buffersize;
     while (f){
-        std::cout << "enter loop" << '\b';
+        // std::cout << "enter loop" << '\b';
         f.read(memblock, buffersize);
         // for(int i=0;i<buffersize;i++){
         //   std::cout << std::bitset<8>(memblock[i]) << '\t';
@@ -104,10 +102,10 @@ class FileClient {
     Status status = writer->Finish();
 
     if (status.ok()) {
-      std::cout << "replay message: "<<reply.message() << '\n';
+      std::cout << "client:\t\t replay message: "<<reply.message() << '\n';
     }else{
-      std::cout << status.error_code() << ": " << status.error_message();
-      std::cout << "file rpc failed." << std::endl;
+      std::cout <<"client:\t\t "<< status.error_code() << ": " << status.error_message();
+      std::cout << "client:\t\t file rpc failed." << std::endl;
     }
   }
 
@@ -117,7 +115,7 @@ class FileClient {
 
 int main(int argc, char** argv) {
   if(argc<4 || argc>5 ){
-    std::cout << "client: missing arguement.\n------ need file path, string, number, [optional buffersize]" << '\n';
+    std::cout << "client:\t\t missing arguement.\n------ need file path, string, number, [optional buffersize]" << '\n';
     return -1;
   }
 
