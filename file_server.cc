@@ -70,25 +70,25 @@ class FileServiceImpl final : public File::Service {
     // char* buffer = new char[f_buffer];
 
     FileRequest file;
-    while (f_byteRemain>0) {
-      reader->Read(&file);
+    while (reader->Read(&file)) {
+      // reader->Read(&file);
       const char *charContent=file.content().c_str();
       std::cout << "str length"<<file.content().length()<<", buffer length"<<f_bufferSize << '\n';
-      for (int i=0;i<f_bufferSize;i++){
-        std::cout << std::bitset<8>(charContent[i]) << '\t';
-      }
-      std::cout << '\n';
-      int len=f_bufferSize;
-      if(f_byteRemain-f_bufferSize>0){
-        //keeping count of size of bit remaining
-        f_byteRemain=f_byteRemain-f_bufferSize;
-      }else{
-        //reached end of file, trim the extra bit
-        len=f_byteRemain;
-        f_byteRemain=f_byteRemain-f_bufferSize;
-      }
+      // for (int i=0;i<f_bufferSize;i++){
+      //   std::cout << std::bitset<8>(charContent[i]) << '\t';
+      // }
+      // std::cout << '\n';
+      // int len=f_bufferSize;
+      // if(f_byteRemain-f_bufferSize>0){
+      //   //keeping count of size of bit remaining
+      //   f_byteRemain=f_byteRemain-f_bufferSize;
+      // }else{
+      //   //reached end of file, trim the extra bit
+      //   len=f_byteRemain;
+      //   f_byteRemain=f_byteRemain-f_bufferSize;
+      // }
 
-      outfile.write(charContent,len);
+      outfile.write(charContent,file.content().length());
     }
     // delete[] buffer;
     outfile.close();

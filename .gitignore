@@ -1,2 +1,5 @@
-./client/*
-./server/*
+client/
+server/
+*.o
+file_client
+file_server

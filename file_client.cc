@@ -48,7 +48,7 @@ class FileClient {
   FileClient(std::shared_ptr<Channel> channel)
       : stub_(File::NewStub(channel)) {}
 
-  void UploadFile(const std::string& filepath,const std::string& str,long num,int buffersize){
+  void UploadFile(const std::string& filepath,const std::string& str,const long num,const int buffersize){
     FileReply reply;
     ClientContext context;
     char * memblock;
@@ -73,15 +73,22 @@ class FileClient {
     std::unique_ptr<ClientWriter<FileRequest> > writer(stub_->UploadFile(&context, &reply));
     // char x[5]={0x48,0x65,0x6c,0x6c,0x6f};
     // std::string y="! Ben!";
+    int size=buffersize;
     while (f){
-      std::cout << "loop1" << '\n';
+        std::cout << "enter loop" << '\b';
         f.read(memblock, buffersize);
-        for(int i=0;i<buffersize;i++){
-          std::cout << std::bitset<8>(memblock[i]) << '\t';
+        // for(int i=0;i<buffersize;i++){
+        //   std::cout << std::bitset<8>(memblock[i]) << '\t';
+        // }
+        // std::cout << '\n';
+        if(f.eof()){
+          //adjust file size for the last steam, may not use all buffer
+          size=fileByte%buffersize;
         }
-        std::cout << '\n';
         FileRequest request;
-        request.set_content(memblock);
+        //NEED SIZE, AS STRING WILL CONTAIN 0X00 (NULL), CAUSE CORRUPTED FILE
+        std::string s(memblock, size);
+        request.set_content(s);
         if(!writer->Write(request)){
           break;
         }
@@ -110,7 +117,8 @@ class FileClient {
 
 int main(int argc, char** argv) {
   if(argc<4 || argc>5 ){
-    std::cout << "client: missing arguement.\n need file path, string, number, [optional buffersize]" << '\n';
+    std::cout << "client: missing arguement.\n------ need file path, string, number, [optional buffersize]" << '\n';
+    return -1;
   }
 
   FileClient file(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
