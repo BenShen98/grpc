@@ -1,0 +1,1 @@
+test name, cmp state (0 => pass, otherwise => server file are corrupted), clientfile (under client forder), serverfile(under server forder), comment 

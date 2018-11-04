@@ -1,0 +1,23 @@
+#!/bin/bash
+
+rm -f result.csv
+# rm -f ./client/*
+rm -f ./server/*
+echo "test name, cmp state (0 => pass, otherwise => server file are corrupted), clientfile (under client forder), serverfile(under server forder), comment " >> result.csv
+./file_server &
+
+
+echo "testbench: testing for correctness for different buffer size"
+declare -a buffersize=(10 5)
+echo ${buffersize[@]}
+# dd if=/dev/urandom of=./client/t1.bin bs=1M count=2 iflag=fullblock
+for i in ${buffersize[@]}; do
+  echo "testbench: testing with buffer size $i bytes"
+  ./file_client "./client/sw.mips.bin" "bufftest" $i $i
+  cmp ./client/sw.mips.bin ./server/$i.bufftest
+  echo  "correctness with buffer size $i, $?, t1.bin, $i.bufftest, "
+done
+
+
+echo "end of test, kill file_server"
+#killall -9 file_server

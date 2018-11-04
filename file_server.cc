@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <memory>
+#include <bitset>
 #include <string>
 #include <map>
 #include <fstream>
@@ -72,7 +73,11 @@ class FileServiceImpl final : public File::Service {
     while (f_byteRemain>0) {
       reader->Read(&file);
       const char *charContent=file.content().c_str();
-      std::cout << file.content() << '\n';
+      std::cout << "str length"<<file.content().length()<<", buffer length"<<f_bufferSize << '\n';
+      for (int i=0;i<f_bufferSize;i++){
+        std::cout << std::bitset<8>(charContent[i]) << '\t';
+      }
+      std::cout << '\n';
       int len=f_bufferSize;
       if(f_byteRemain-f_bufferSize>0){
         //keeping count of size of bit remaining
@@ -84,7 +89,6 @@ class FileServiceImpl final : public File::Service {
       }
 
       outfile.write(charContent,len);
-      std::cout << file.content().length() <<'\t' <<std::flush;
     }
     // delete[] buffer;
     outfile.close();
