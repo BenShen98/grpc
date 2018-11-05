@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#check if is read to run
+### check if have file server and client made
 if [ ! -f ./file_server ]; then
     echo "file_server not found!"
     exit 0
@@ -10,7 +10,7 @@ if [ ! -f ./file_client ]; then
     exit 0
 fi
 
-#init
+### init
 rm -f result.csv
 rm -f ./client/*
 rm -f ./server/*
@@ -18,7 +18,7 @@ killall -q file_server
 echo "test name, cmp state (0 => pass | otherwise => server file are corrupted), clientfile (under client forder), serverfile(under server forder), comment " >> result.csv
 ./file_server &
 
-#test for  different buffer size
+### test for  different buffer size
 echo -e "testbench:\t testing for correctness for different buffer size"
 declare -a buffersize=(1 2 3 4 5 6 7 8 9 10 100 1000)
 # echo ${buffersize[@]}
@@ -31,7 +31,7 @@ for i in ${buffersize[@]}; do
 done
 
 
-#test for large file
+### test for large file
 echo -e "testbench:\t testing for correctness for large file with defaul buffer size (defined in client)"
 declare -a filesize=(1 2 10 )
 for i in ${filesize[@]}; do
@@ -46,7 +46,7 @@ for i in ${filesize[@]}; do
 done
 
 
-#test for multiple clients
+### test for multiple clients
 echo -e "testbench:\t server serve multiple clients at same time"
 declare -a largeClient=(1 2 )
 declare -a smallClient=(3 4 5 6 7 8 9 10)
@@ -63,7 +63,6 @@ while pgrep -x "file_client" > /dev/null; do
   echo -e "testbench:\t wait client to finish, sleep 3s"
   sleep 3s
 done
-# sleep 5s
 #check result
 echo -e "testbench:\t all client finished compare different"
 for i in ${largeClient[@]}; do
@@ -80,7 +79,7 @@ done
 #terminate
 echo "end of test, kill file_server"
 killall -9 file_server
-echo "****************************** below are the text result ****************************"
-echo "*********** result can also be found as csv on root dir, called result.csv***********"
-echo "*************************************************************************************"
+echo "****************************** below are the text result *****************************"
+echo "*********** result can also be found as csv on root dir, called result.csv ***********"
+echo "**************************************************************************************"
 cat ./result.csv
