@@ -33,11 +33,13 @@ GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 
 
-all: system-check file_client file_server
+all: system-check system-check file_client file_server
+
+test: all
+	./testbench
 
 a: system-check file_client file_server
 	 ./file_server
-
 
 proto: file.grpc.pb.cc file.pb.cc
 

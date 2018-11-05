@@ -1,74 +1,86 @@
 #!/bin/bash
 
+#check if is read to run
+if [ ! -f ./file_server ]; then
+    echo "file_server not found!"
+    exit 0
+fi
+if [ ! -f ./file_client ]; then
+    echo "file_client not found!"
+    exit 0
+fi
+
+#init
 rm -f result.csv
-# rm -f ./client/*
+rm -f ./client/*
 rm -f ./server/*
-killall file_server
+killall -q file_server
 echo "test name, cmp state (0 => pass | otherwise => server file are corrupted), clientfile (under client forder), serverfile(under server forder), comment " >> result.csv
 ./file_server &
 
-
-echo -e "testbench:\ttesting for correctness for different buffer size"
+#test for  different buffer size
+echo -e "testbench:\t testing for correctness for different buffer size"
 declare -a buffersize=(1 2 3 4 5 6 7 8 9 10 100 1000)
 # echo ${buffersize[@]}
 dd if=/dev/urandom of=./client/t1.bin bs=1k count=1 iflag=fullblock
 for i in ${buffersize[@]}; do
-  echo -e "testbench:\ttesting with buffer size $i bytes"
+  echo -e "testbench:\t testing with buffer size $i bytes"
   ./file_client "./client/t1.bin" "bufftest" $i $i
   cmp ./client/t1.bin ./server/$i.bufftest
   echo  "correctness with buffer size $i, $?, t1.bin, $i.bufftest, " >> result.csv
 done
 
 
+#test for large file
+echo -e "testbench:\t testing for correctness for large file with defaul buffer size (defined in client)"
+declare -a filesize=(1 2 10 )
+for i in ${filesize[@]}; do
+  echo -e "testbench:\t testing transfer file with size $(expr $i \* 500)M"
+  echo -e "testbench:\t generating test file,may take long time with large file"
+  dd if=/dev/urandom of=./client/t2.$i.bin bs=500M count=$i iflag=fullblock
+  echo -e "testbench:\t start client"
+  ./file_client "./client/t2.$i.bin" "largefile" $i
+  echo -e "testbench:\t compare difference , may take long time with large file"
+  cmp ./client/t2.$i.bin ./server/$i.largefile
+  echo  "correctness for large file with size $i, $?, t2.$i.bin, $i.largefile, " >> result.csv
+done
 
-# echo -e "testbench:\ttesting for correctness for large file with defaul buffer size (defined in client)"
-# declare -a filesize=(1 2 10 )
-# for i in ${filesize[@]}; do
-#   echo -e "testbench:\ttesting transfer file with size $(expr $i \* 500)M, may take long time with large file"
-#   echo -e "testbench:\tgenerating test file"
-#   dd if=/dev/urandom of=./client/t2.$i.bin bs=500M count=$i iflag=fullblock
-#   echo -e "testbench:\tstart client"
-#   ./file_client "./client/t2.$i.bin" "largefile" $i
-#   echo -e "testbench:\tcompare difference , may take long time with large file"
-#   cmp ./client/t2.$i.bin ./server/$i.largefile
-#   echo  "correctness for large file with size $i, $?, t2.$i.bin, $i.largefile, " >> result.csv
-# done
 
-
-
-echo -e "testbench:\tserver serve multiple clients at same time"
+#test for multiple clients
+echo -e "testbench:\t server serve multiple clients at same time"
 declare -a largeClient=(1 2 )
 declare -a smallClient=(3 4 5 6 7 8 9 10)
 for i in ${largeClient[@]}; do
-  echo -e "testbench:\tstart client send 500 MB data with id $i"
+  echo -e "testbench:\t start client send 500 MB data with id $i"
   ./file_client "./client/t2.1.bin" "multiclient" $i &
 done
 for i in ${smallClient[@]}; do
-  echo -e "testbench:\tstart client send 1 kB data with id $i"
+  echo -e "testbench:\t start client send 1 kB data with id $i"
   ./file_client "./client/t1.bin" "multiclient" $i &
 done
 #wait client finish
 while pgrep -x "file_client" > /dev/null; do
-  echo -e "testbench:\twait client to finish, sleep 3s"
+  echo -e "testbench:\t wait client to finish, sleep 3s"
   sleep 3s
 done
 # sleep 5s
 #check result
-echo -e "testbench:\tall client finished compare different"
+echo -e "testbench:\t all client finished compare different"
 for i in ${largeClient[@]}; do
-  echo -e "testbench:\tcompare different for client $i"
+  echo -e "testbench:\t compare different for client $i"
   cmp ./client/t2.1.bin ./server/$i.multiclient
   echo  "correctness for multiple client (id${i}), $?, t2.1.bin, $i.multiclient, " >> result.csv
 done
 for i in ${smallClient[@]}; do
-  echo -e "testbench:\tcompare different for client $i"
+  echo -e "testbench:\t compare different for client $i"
   cmp ./client/t1.bin ./server/$i.multiclient
   echo  "correctness for multiple client (id${i}), $?, t1.bin, $i.multiclient, " >> result.csv
 done
 
+#terminate
 echo "end of test, kill file_server"
 killall -9 file_server
-
-echo "**********below are the text resutl********"
-echo "can be found as csv on root, called result.csv"
+echo "****************************** below are the text result ****************************"
+echo "*********** result can also be found as csv on root dir, called result.csv***********"
+echo "*************************************************************************************"
 cat ./result.csv

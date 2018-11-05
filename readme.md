@@ -1,0 +1,3 @@
+- test file will take 13.6 GB of space
+- need have proto3 installed
+- the current testbench version will kill process with name file_server file_client
