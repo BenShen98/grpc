@@ -1,9 +1,9 @@
 # Simple grpc file server
 
-A basic grpc synchronous server which allows multiple clients to upload large file to the server at the same time.
-The client can also send a 64 bits integer (long) and a string along with the file.
-Metadata (integer, string, file information etc) are sent as context to server.
-While file its self is read by std::fstream in chunks, stream to the server, assembly back together. 
+A basic grpc synchronous server which allows multiple clients to upload file to the server at the same time.
+* The large file its self is read by std::fstream as small chunks, stream to the server, assembly back together. 
+* The client can also send a 64 bits integer (long) and a string along with the file.
+* Metadata (integer, string, file information etc) are sent as context to server. To avoid wasting bandwidth while streaming, and allow rapid adjustment of metadata.
 
 ## Getting Started
 
