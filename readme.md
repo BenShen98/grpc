@@ -50,7 +50,7 @@ The testbench will run 3 sections of the test:
 
 ### tests result
 
-Below is what test result should look like (under [./result.csv](https://github.com/Ben20082010/grpc/blob/master/result.csv)).\
+Below is what test result should look like (under [./result.csv](https://github.com/BenShen98/grpc/blob/master/result.csv)).\
 The client file and server file are stored in ./client and ./server respectively from root of this project.\
 The 'cmp state' column output the exitcode for 'cmp clientfile serverfile'. Which is 0 if there is no difference.
 
