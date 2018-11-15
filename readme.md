@@ -85,7 +85,8 @@ The 'cmp state' column output the exitcode for 'cmp clientfile serverfile'. Whic
 
 ## Built With
 
-* [grpc](https://grpc.io/) - The protocol used
+* [protobuff3](https://developers.google.com/protocol-buffers/docs/proto3) - The protocol used
+* [grpc](https://grpc.io/) - RPC framework used (natively support protobuff)
 
 
 ## Acknowledgments
